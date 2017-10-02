@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MEMORY GAME</title>
+  <script
+          src="https://code.jquery.com/jquery-3.2.1.js"
+          integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+          crossorigin="anonymous"></script>
+
+  <script
+          src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"
+          integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30="
+          crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
+</head>
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<body>
+<div id="wrapper">
+  <header>
+    <h1>MEMORY GAME</h1>
+  </header>
+  <main>
+    <div id="part1" class="part1" style="visibility: visible;">
+    </div>
+    <hr>
+    <div id="part2" class="part2" style="visibility: visible;">
+    </div>
+  </main>
+  <footer>
+    <figure class="ars">
+      <img src="img/misc/123.jpg" alt="All right reserved" width="150" height="100"><br>
+      <details>
+        <summary>Copyright 2017</summary>
+        <p>All right reserved to Yonatan Gez &copy <time>00:00</time>.</p>
+      </details>
+    </figure>
+  </footer>
+</div>
+<script>
+    $(document).ready(function() {
+
+        // can be 'part1' or 'part2' or 'none'
+        var fiqurePressed = "none";
+
+        var imagePressed = "";
+        var lastElement;
+        var numberOfSuccess = 0;
+        var numberOfTries = 0;
+
+        var images = ['Akita-Inu.jpg', 'australian-cattle-dog.jpg', 'border-collie.jpg', 'boxer.jpg',
+            'dog-de-bordo.jpg', 'french-bulldog.jpg', 'german-shepherd.jpg', 'labrador.jpg'];
+
+        function getFigure(img, figure) {
+            return "<figure class='imgx'>\n" +
+                "<img src='img/"+ figure +"/" + img + "' alt='Akita Inu'>\n" +
+                "</figure>\n" +
+                "<figure class='imgc'>\n" +
+                "<img src='img/misc/cover.png' alt='Img Cover'>\n" +
+                "</figure>";
+        }
+
+        function randomizeImages(imgs) {
+            var i = imgs.length;
+            var j;
+            var temp;
+            while ( i != 0 ) {
+                j = Math.floor(Math.random() * (i - 1));
+                i = i - 1;
+                temp = imgs[i];
+                imgs[i] = imgs[j];
+                imgs[j] = temp;
+
+            }
+            return  imgs;
+        }
+
+        function displayImages(imgs, figure) {
+            for (var i = 0; i < imgs.length; i++) {
+                var img = imgs[i];
+                document.getElementById(figure).innerHTML += getFigure(img, figure)
+            }
+        }
+
+        displayImages(randomizeImages(images), 'part1');
+        displayImages(randomizeImages(images), 'part2');
+
+        function hideCards(currentElement, lastElement) {
+            return function() {
+                $(lastElement).css({"visibility": "visible"});
+                $(currentElement).css({"visibility": "visible"});
+            }
+        }
+
+        function ConfirmDialog(message) {
+            $('<div></div>').appendTo('body')
+                .html('<div><h6>'+message+'</h6></div>')
+                .dialog({
+                    modal: true, title: 'Game Over!!!', zIndex: 10000, autoOpen: true,
+                    width: 'auto', resizable: false,
+                    closeOnEscape: false,
+                    open: function(event, ui) {
+                        $(".ui-dialog-titlebar-close", ui.dialog | ui).hide();
+                    },
+                    buttons: {
+                        Yes: function () {
+                            location.reload();
+                        },
+                        No: function () {
+                            $(this).dialog("close");
+                        }
+                    },
+                    close: function () {
+                    }
+                });
+        }
+
+
+        $("figure").click(function() {
+
+            // check if the game is over already
+            if (numberOfSuccess == images.length) {
+                alert("The Game Is Over!\nPlease refresh to play again...");
+                return;
+            }
+
+            //press on image or cover
+            var fiqureClass = $(this).attr("class");
+            //part1 or part2
+            var parentId = $(this).parent().attr("id");
+            //the image that we pressed, the split is spliting and the pop is the last element in the array
+            var currentImagePress = $(this).prev().children().attr("src").split("/").pop();
+
+            // if we press on cover
+            if (fiqureClass === "imgc") {
+
+                // if this is the first picture you press
+                if (fiqurePressed === 'none') {
+                    fiqurePressed = parentId;
+                    imagePressed = currentImagePress;
+                    lastElement = this; // this == cover I pressed
+                    $(this).css({"visibility": "hidden"});
+
+                } else if (fiqurePressed !== parentId) { // if press on the opposite part
+
+                    numberOfTries++;
+
+                    $(this).css({"visibility": "hidden"});
+
+                    // if success, count the success and leave the cover hidden
+                    if (imagePressed === currentImagePress) {
+                        numberOfSuccess++;
+                    } else { // if wrong, display the covers again after 0.5 second
+                        setTimeout(hideCards(this, lastElement), 500);
+                    }
+
+                    fiqurePressed = "none";
+
+                }
+
+                // check if finish the game
+                if (numberOfSuccess == images.length) {
+                    ConfirmDialog("It took you " + numberOfTries + " tries!<br><br>Press 'Yes' to refresh the page.<br>Press 'No' to check out the dogs..");
+
+                    //alert("Game Over!!\nIt took you " + numberOfTries + " tries!!\nRefresh the page and try to do it better...");
+                }
+            }
+        })
+    })
+
+</script>
+</body>
+</html>
